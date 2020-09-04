@@ -10,15 +10,20 @@ import { UserResolver } from "./resolvers/user";
 import redis from 'redis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
-import { MyContext } from "./types";
+import cors from 'cors';
 
-const corsOptions = { credentials: true, origin: 'http://localhost:4000/graphql', };
 const main = async function(){
   const orm = await MikroORM.init(microConfig);
   await orm.getMigrator().up();
   const app = express();
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+      credentials: true,
+    })
+  );
   app.use(
     session({
       name: 'qid',
@@ -32,9 +37,9 @@ const main = async function(){
         sameSite: 'lax', //csrf
         secure: __prod__ // cookie only works in https
       },
+      saveUninitialized: false,
       secret: 'youssefdev',
       resave: false,
-      saveUninitialized: false
     })
   );
   const apolloServer = new ApolloServer({
@@ -42,10 +47,17 @@ const main = async function(){
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: function({ req, res }): MyContext { return ({ em: orm.em, req, res }); }
+    context: ({ req, res }) => ({
+      em: orm.em,
+      req,
+      res
+    }),
   });
 
-  apolloServer.applyMiddleware({ app, cors: corsOptions });
+  apolloServer.applyMiddleware({
+    app,
+    cors: false
+  });
   app.listen(4000, function() {
     console.log('server started on http://localhost:4000/graphql');
   });
