@@ -13,4 +13,6 @@ export default {
   dbName: 'lireEdit',
   type: 'postgresql',
   debug: !__prod__,
+  user: 'postgres',
+  password: 'root'
 } as Parameters<typeof MikroORM.init>[0];
