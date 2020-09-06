@@ -7,19 +7,21 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from "./resolvers/post";
 import { UserResolver } from "./resolvers/user";
-import redis from 'redis';
+import Redis from 'ioredis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
+// import { sendEmail } from "./utils/sendEmail";
 // import { User } from "./entities/user";
 
 const main = async function(){
   const orm = await MikroORM.init(microConfig);
   // await orm.em.nativeDelete(User, {});
+  // sendEmail('youssef.samih97@gmail.com', 'hello');
   await orm.getMigrator().up();
   const app = express();
   const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  const redis = new Redis();
   app.use(
     cors({
       origin: "http://localhost:3000",
@@ -30,7 +32,7 @@ const main = async function(){
     session({
       name: COOKIE_NAME,
       store: new RedisStore({ 
-        client: redisClient,
+        client: redis,
         disableTouch: true,
       }),
       cookie: {
@@ -52,7 +54,8 @@ const main = async function(){
     context: ({ req, res }) => ({
       em: orm.em,
       req,
-      res
+      res,
+      redis
     }),
   });
 
