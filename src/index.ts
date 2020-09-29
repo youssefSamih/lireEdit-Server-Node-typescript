@@ -1,6 +1,5 @@
-import { MikroORM } from "@mikro-orm/core";
+import 'reflect-metadata';
 import { __prod__, COOKIE_NAME } from "./contants";
-import microConfig from "./mikro-orm.config";
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from "type-graphql";
@@ -11,14 +10,25 @@ import Redis from 'ioredis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
+import { createConnection } from "typeorm";
+import { Post } from "./entities/post";
+import { User } from "./entities/user";
 // import { sendEmail } from "./utils/sendEmail";
 // import { User } from "./entities/user";
 
 const main = async function(){
-  const orm = await MikroORM.init(microConfig);
+  const conn = await createConnection({
+    type: 'postgres',
+    database: 'lireedit2',
+    username: 'postgres',
+    password: 'root',
+    logging: true,
+    synchronize: true,
+    entities: [Post, User]
+  });
+
   // await orm.em.nativeDelete(User, {});
   // sendEmail('youssef.samih97@gmail.com', 'hello');
-  await orm.getMigrator().up();
   const app = express();
   const RedisStore = connectRedis(session);
   const redis = new Redis();
@@ -52,7 +62,6 @@ const main = async function(){
       validate: false,
     }),
     context: ({ req, res }) => ({
-      em: orm.em,
       req,
       res,
       redis
