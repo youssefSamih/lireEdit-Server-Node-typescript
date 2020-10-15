@@ -1,18 +1,21 @@
 import 'reflect-metadata';
-import { __prod__, COOKIE_NAME } from "./contants";
-import express from 'express';
+
+import { COOKIE_NAME, __prod__ } from "./contants";
+
 import { ApolloServer } from 'apollo-server-express';
-import { buildSchema } from "type-graphql";
 import { HelloResolver } from './resolvers/hello';
+import { Post } from "./entities/post";
 import { PostResolver } from "./resolvers/post";
-import { UserResolver } from "./resolvers/user";
 import Redis from 'ioredis';
-import session from 'express-session';
+import { User } from "./entities/user";
+import { UserResolver } from "./resolvers/user";
+import { buildSchema } from "type-graphql";
 import connectRedis from 'connect-redis';
 import cors from 'cors';
 import { createConnection } from "typeorm";
-import { Post } from "./entities/post";
-import { User } from "./entities/user";
+import express from 'express';
+import session from 'express-session';
+
 // import { sendEmail } from "./utils/sendEmail";
 // import { User } from "./entities/user";
 
@@ -20,8 +23,8 @@ const main = async function(){
   const conn = await createConnection({
     type: 'postgres',
     database: 'lireedit2',
-    username: 'postgres',
-    password: 'root',
+    // username: 'postgres',
+    // password: 'root',
     logging: true,
     synchronize: true,
     entities: [Post, User]
