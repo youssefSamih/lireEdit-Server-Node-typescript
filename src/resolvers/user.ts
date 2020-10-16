@@ -1,13 +1,21 @@
-import { Resolver, Mutation, Field, Arg, Ctx, ObjectType, Query } from "type-graphql";
-import { MyContext } from "src/types";
-import { User } from "../entities/user";
+import {
+  Resolver,
+  Mutation,
+  Field,
+  Arg,
+  Ctx,
+  ObjectType,
+  Query
+} from 'type-graphql';
+import { MyContext } from 'src/types';
+import { User } from '../entities/user';
 import argon2 from 'argon2';
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../contants";
-import { UsernamePasswordInput } from "./UsernamePasswordInput";
-import { validateRegister } from "../utils/validateRegister";
-import { sendEmail } from "../utils/sendEmail";
-import { v4 } from "uuid";
-import { getConnection } from "typeorm";
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../contants';
+import { UsernamePasswordInput } from './UsernamePasswordInput';
+import { validateRegister } from '../utils/validateRegister';
+import { sendEmail } from '../utils/sendEmail';
+import { v4 } from 'uuid';
+import { getConnection } from 'typeorm';
 @ObjectType()
 class FieldError {
   @Field()
@@ -19,10 +27,10 @@ class FieldError {
 
 @ObjectType()
 class UserResponse {
-  @Field(() => [FieldError], {nullable: true})
+  @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];
 
-  @Field(() => User, {nullable: true})
+  @Field(() => User, { nullable: true })
   user?: User;
 }
 
@@ -32,7 +40,7 @@ export class UserResolver {
   async changePassword(
     @Arg('token') token: string,
     @Arg('newPassword') newPassword: string,
-    @Ctx() {redis, req}: MyContext
+    @Ctx() { redis, req }: MyContext
   ): Promise<UserResponse> {
     if (newPassword.length <= 3) {
       return {
@@ -70,9 +78,12 @@ export class UserResolver {
         ]
       };
     }
-    await User.update({ id: userIdNum }, {
-      password: await argon2.hash(newPassword)
-    });
+    await User.update(
+      { id: userIdNum },
+      {
+        password: await argon2.hash(newPassword)
+      }
+    );
     await redis.del(key);
     req.session.userId = user?.id;
     return {
@@ -84,7 +95,7 @@ export class UserResolver {
   async forgotPassword(
     @Arg('email') email: string,
     @Ctx() { redis }: MyContext
-  ){
+  ) {
     const user = await User.findOne({ where: { email } });
     if (!user) {
       return true;
@@ -97,16 +108,14 @@ export class UserResolver {
       1000 * 60 * 60 * 24
     );
     sendEmail(
-      email, 
+      email,
       `<a href="http://localhost:3000/change-password/${token}">reset password</a>`
     );
     return true;
   }
 
   @Query(() => User, { nullable: true })
-  me(
-    @Ctx() { req }: MyContext
-  ) {
+  me(@Ctx() { req }: MyContext) {
     if (!req.session.userId) {
       return null;
     }
@@ -125,12 +134,17 @@ export class UserResolver {
     const hashedPassword = await argon2.hash(options.password);
     let user;
     try {
-      const result = await getConnection().createQueryBuilder().insert().into(User).values({
+      const result = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(User)
+        .values({
           username: options.username,
           email: options.email,
-          password: hashedPassword,
-      }).returning("*")
-      .execute();
+          password: hashedPassword
+        })
+        .returning('*')
+        .execute();
       user = result.raw[0];
     } catch (err) {
       if (err.code === '23505') {
@@ -141,7 +155,7 @@ export class UserResolver {
               message: 'username already taken'
             }
           ]
-        }
+        };
       }
     }
     req.session.userId = user?.id;
@@ -154,12 +168,12 @@ export class UserResolver {
   async login(
     @Arg('usernameOrEmail') usernameOrEmail: string,
     @Arg('password') password: string,
-    @Ctx() {req}: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     const user = await User.findOne(
-      usernameOrEmail.includes('@') ?
-      { where: {email: usernameOrEmail}} :
-      { where: {username: usernameOrEmail}}
+      usernameOrEmail.includes('@')
+        ? { where: { email: usernameOrEmail } }
+        : { where: { username: usernameOrEmail } }
     );
     if (!user) {
       return {
@@ -169,7 +183,7 @@ export class UserResolver {
             message: `that username doesn't exist`
           }
         ]
-      }
+      };
     }
     const valid = await argon2.verify(user.password, password);
     if (!valid) {
@@ -180,7 +194,7 @@ export class UserResolver {
             message: `incorrect password`
           }
         ]
-      }
+      };
     }
     req.session.userId = user.id;
     return {
@@ -189,17 +203,17 @@ export class UserResolver {
   }
 
   @Mutation(() => Boolean)
-  logout(
-    @Ctx() {req, res}: MyContext
-  ) {
-    return new Promise(resolve => req.session.destroy(err => {
-      if (err) {
-        console.log(err);
-        resolve(false);
-        return;
-      }
-      res.clearCookie(COOKIE_NAME);
-      resolve(true);
-    }));
+  logout(@Ctx() { req, res }: MyContext) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        res.clearCookie(COOKIE_NAME);
+        resolve(true);
+      })
+    );
   }
 }

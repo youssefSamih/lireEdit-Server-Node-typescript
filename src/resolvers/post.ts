@@ -1,7 +1,16 @@
 import { MyContext } from '../types';
 import { isAuth } from '../middleware/isAuth';
-import { Query, Resolver, Arg, Mutation, Field, InputType, Ctx, UseMiddleware } from "type-graphql";
-import { Post } from "../entities/post";
+import {
+  Query,
+  Resolver,
+  Arg,
+  Mutation,
+  Field,
+  InputType,
+  Ctx,
+  UseMiddleware
+} from 'type-graphql';
+import { Post } from '../entities/post';
 
 @InputType()
 class PostInput {
@@ -20,9 +29,7 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(
-    @Arg('id') id: number
-  ): Promise<Post | undefined> {
+  post(@Arg('id') id: number): Promise<Post | undefined> {
     return Post.findOne(id);
   }
 
@@ -56,9 +63,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
-  async deletePost(
-    @Arg('id') id: number,
-  ): Promise<boolean> {
+  async deletePost(@Arg('id') id: number): Promise<boolean> {
     await Post.delete(id);
     return true;
   }
