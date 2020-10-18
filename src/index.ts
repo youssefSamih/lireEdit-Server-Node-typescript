@@ -14,6 +14,7 @@ import connectRedis from 'connect-redis';
 import cors from 'cors';
 import { createConnection } from 'typeorm';
 import express from 'express';
+import { join } from 'path';
 import session from 'express-session';
 
 // import { sendEmail } from "./utils/sendEmail";
@@ -27,10 +28,12 @@ const main = async function () {
     // password: 'root',
     logging: true,
     synchronize: true,
+    migrations: [join(__dirname, './migrations/*')],
     entities: [Post, User]
   });
 
-  // await orm.em.nativeDelete(User, {});
+  // conn.runMigrations();
+  // Post.remove([]);
   // sendEmail('youssef.samih97@gmail.com', 'hello');
   const app = express();
   const RedisStore = connectRedis(session);
