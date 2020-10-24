@@ -6,8 +6,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   BaseEntity,
-  ManyToOne
+  ManyToOne,
+  OneToMany
 } from 'typeorm';
+import { Updoot } from './updoot';
 import { User } from './user';
 
 @ObjectType()
@@ -20,11 +22,11 @@ export class Post extends BaseEntity {
   @Field()
   @Column()
   title!: string;
-  @Field(() => String)
+
   @Field()
   @Column()
   text!: string;
-  @Field(() => String)
+
   @Field()
   @Column({ type: 'int', default: 0 })
   points!: number;
@@ -33,8 +35,12 @@ export class Post extends BaseEntity {
   @Column()
   creatorId: number;
 
+  @Field()
   @ManyToOne(() => User, (user) => user.posts)
   creator: User;
+
+  @OneToMany(() => Updoot, (updoot) => updoot.post)
+  updoots: Updoot[];
 
   @Field(() => String)
   @CreateDateColumn()

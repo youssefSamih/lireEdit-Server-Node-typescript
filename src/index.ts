@@ -1,21 +1,20 @@
 import 'reflect-metadata';
-
-import { COOKIE_NAME, __prod__ } from './contants';
-
 import { ApolloServer } from 'apollo-server-express';
-import { HelloResolver } from './resolvers/hello';
-import { Post } from './entities/post';
-import { PostResolver } from './resolvers/post';
-import Redis from 'ioredis';
-import { User } from './entities/user';
-import { UserResolver } from './resolvers/user';
+import { createConnection } from 'typeorm';
 import { buildSchema } from 'type-graphql';
 import connectRedis from 'connect-redis';
-import cors from 'cors';
-import { createConnection } from 'typeorm';
+import session from 'express-session';
 import express from 'express';
 import { join } from 'path';
-import session from 'express-session';
+import Redis from 'ioredis';
+import cors from 'cors';
+import { COOKIE_NAME, __prod__ } from './contants';
+import { HelloResolver } from './resolvers/hello';
+import { PostResolver } from './resolvers/post';
+import { UserResolver } from './resolvers/user';
+import { Updoot } from './entities/updoot';
+import { Post } from './entities/post';
+import { User } from './entities/user';
 
 // import { sendEmail } from "./utils/sendEmail";
 // import { User } from "./entities/user";
@@ -29,7 +28,7 @@ const main = async function () {
     logging: true,
     synchronize: true,
     migrations: [join(__dirname, './migrations/*')],
-    entities: [Post, User]
+    entities: [Post, User, Updoot]
   });
 
   // conn.runMigrations();
