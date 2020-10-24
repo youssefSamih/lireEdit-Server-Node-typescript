@@ -16,7 +16,7 @@ import {
   ObjectType
 } from 'type-graphql';
 import { Post } from '../entities/post';
-import { Updoot } from '../entities/updoot';
+// import { Updoot } from '../entities/updoot';
 
 @InputType()
 class PostInput {
