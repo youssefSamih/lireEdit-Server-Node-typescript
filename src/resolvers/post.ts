@@ -1,3 +1,4 @@
+import { Updoot } from './../entities/updoot';
 import { getConnection } from 'typeorm';
 import { MyContext } from '../types';
 import { isAuth } from '../middleware/isAuth';
@@ -16,7 +17,6 @@ import {
   ObjectType
 } from 'type-graphql';
 import { Post } from '../entities/post';
-// import { Updoot } from '../entities/updoot';
 
 @InputType()
 class PostInput {
@@ -51,28 +51,47 @@ export class PostResolver {
     const isUpdoot = value !== -1;
     const realValue = isUpdoot ? 1 : -1;
     const { userId } = req.session;
-    // await Updoot.insert({
-    //   userId,
-    //   postId,
-    //   value: realValue
-    // });
-    await getConnection().query(
-      `
-      START TRANSACTION;
+    const updoot = await Updoot.findOne({ where: { postId, userId } });
+    if (updoot && updoot.value !== realValue) {
+      await getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+          update updoot
+          set value = $1
+          where "postId" = $2 and "userId" = $3
+        `,
+          [realValue, postId, userId]
+        );
 
-      insert into updoot ("userId", "postId", value)
-      values (${userId}, ${postId}, ${realValue});
-
-      update post
-      set points = points + ${realValue}
-      where id = ${postId};
-
-      COMMIT;
-    `
-    );
-    // await Post.update({
-    //   id: post
-    // })
+        await tm.query(
+          `
+          update post
+          set points = points + $1
+          where id = $2;
+        `,
+          [2 * realValue, postId]
+        );
+      });
+    } else if (!updoot) {
+      // has never voted
+      await getConnection().transaction(async (tm) => {
+        await tm.query(
+          `
+          insert into updoot ("userId", "postId", value)
+          values ($1, $2, $3)
+        `,
+          [userId, postId, realValue]
+        );
+        await tm.query(
+          `
+          update post
+          set points = points + $1
+          where id = $2;
+        `,
+          [realValue, postId]
+        );
+      });
+    }
     return true;
   }
 
@@ -84,19 +103,9 @@ export class PostResolver {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
     const replacements: any[] = [realLimitPlusOne];
-    // const qb = getConnection()
-    //   .getRepository(Post)
-    //   .createQueryBuilder('p')
-    //   .innerJoinAndSelect('p.creator', 'u', 'u.id = p."creatorId"')
-    //   .orderBy('p."createdAt"', 'DESC') //2 cot string to typeorm auto know and replace createdAt with created_at column
-    //   .take(realLimitPlusOne);
     if (cursor) {
-      // qb.where('p."createdAt" < :cursor', {
-      //   cursor: new Date(parseInt(cursor))
-      // });
       replacements.push(new Date(parseInt(cursor)));
     }
-    // const posts = await qb.getMany();
     const posts = await getConnection().query(
       `
       select p.*,
