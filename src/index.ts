@@ -23,8 +23,8 @@ const main = async function () {
   const conn = await createConnection({
     type: 'postgres',
     database: 'lireedit2',
-    // username: 'postgres',
-    // password: 'root',
+    username: 'postgres',
+    password: 'root',
     logging: true,
     synchronize: true,
     migrations: [join(__dirname, './migrations/*')],
