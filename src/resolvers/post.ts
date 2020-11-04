@@ -44,8 +44,8 @@ export class PostResolver {
   }
 
   @FieldResolver(() => User)
-  creator(@Root() post: Post) {
-    return User.findOne(post.creatorId);
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(post.id);
   }
 
   @Mutation(() => Boolean)

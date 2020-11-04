@@ -15,6 +15,7 @@ import { UserResolver } from './resolvers/user';
 import { Updoot } from './entities/updoot';
 import { Post } from './entities/post';
 import { User } from './entities/user';
+import { createUserLoader } from './utils/createUserLoader';
 
 // import { sendEmail } from "./utils/sendEmail";
 // import { User } from "./entities/user";
@@ -23,8 +24,8 @@ const main = async function () {
   const conn = await createConnection({
     type: 'postgres',
     database: 'lireedit2',
-    username: 'postgres',
-    password: 'root',
+    // username: 'postgres',
+    // password: 'root',
     logging: true,
     synchronize: true,
     migrations: [join(__dirname, './migrations/*')],
@@ -69,7 +70,8 @@ const main = async function () {
     context: ({ req, res }) => ({
       req,
       res,
-      redis
+      redis,
+      userLoader: createUserLoader()
     })
   });
 
